@@ -78,6 +78,9 @@ class InvestIntoProject(APIView):
 
         investor.refresh_from_db()
         project_to_invest_into.refresh_from_db()
+        project_to_invest_into.funded_by = investor
+        project_to_invest_into.funded = True
+        investor.remaining_amount -= project_to_invest_into.amount
         return Response(
             data={
                 "funded_project": ProjectSerializer(instance=project_to_invest_into).data,
