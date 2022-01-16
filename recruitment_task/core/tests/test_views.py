@@ -50,3 +50,83 @@ class ProjectDetailsViewTestCase(TestCase):
 
         self.assertEqual(project_data['id'], self.project.id)
         self.assertEqual(project_data['name'], self.project.name)
+
+
+class MatchingProjectsViewTest(TestCase):
+    """Testcase for MatchingProjectsView."""
+
+    @staticmethod
+    def _get_url(investor_id):
+        return f'/investors/{investor_id}/matches/'
+    
+    def setUp(self):
+        self.investor = Investor.objects.create(
+            name='INVESTOR 1',
+            remaining_amount=50000.00,
+            total_amount=100000.00,
+            individual_amount=5000.00,
+            project_delivery_deadline='2022-02-22',
+        )
+        self.project_1 = Project.objects.create(
+            name='PROJECT 1',
+            description='test_1',
+            amount=500.00,
+            delivery_date='2022-01-22',
+        )
+        self.project_2 = Project.objects.create(
+            name='PROJECT 2',
+            description='test_2',
+            amount=11000.00,
+            delivery_date='2024-01-22',
+        )
+    
+        self.client = APIClient()
+
+    def test_matching_projects_list(self):
+        """Test that proper projects are listed."""
+        url = self._get_url(self.investor.id)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data[0]['name'], 'PROJECT 1')
+
+
+class MathingInvestorsViewTest(TestCase):
+    """Testcase for MathingInvestorsView."""
+
+    @staticmethod
+    def _get_url(product_id):
+        return f'/projects/{product_id}/matches/'
+    
+    def setUp(self):
+
+        self.project_1 = Project.objects.create(
+            name='PROJECT 1',
+            description='test_1',
+            amount=500.00,
+            delivery_date='2023-01-22',
+        )
+        self.investor_1 = Investor.objects.create(
+            name='INVESTOR 1',
+            remaining_amount=50000.00,
+            total_amount=100000.00,
+            individual_amount=500.00,
+            project_delivery_deadline='2022-02-22',
+        )
+
+        self.investor_2 = Investor.objects.create(
+            name='INVESTOR 2',
+            remaining_amount=50000.00,
+            total_amount=100000.00,
+            individual_amount=500.00,
+            project_delivery_deadline='2024-02-22',
+        )
+
+        self.client = APIClient()
+
+    def test_matching_investors_list(self):
+        """Test that proper projects are listed."""
+        url = self._get_url(self.project_1.id)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
