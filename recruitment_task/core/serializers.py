@@ -26,7 +26,7 @@ class ProjectDetailsSerializer(serializers.ModelSerializer):
         model = Project
         fields = "__all__"
         read_only_fields = ["funded", "funded_by", "list_investors"]
-        
+
 
 # Added list_projects for listing Projects that can match with Investor. 
 class InvestorDetailsSerializer(serializers.ModelSerializer):
