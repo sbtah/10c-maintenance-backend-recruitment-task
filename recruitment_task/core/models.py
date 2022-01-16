@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 
 class Investor(models.Model):
@@ -22,6 +23,12 @@ class Investor(models.Model):
 
     def __str__(self):
         return f"Investor: {self.name}"
+
+    def list_projects(self):
+        """Returns list of IDs of all projects that can be funded by Investor"""
+        items = Project.objects.filter(Q(funded=False) & Q(amount__lte=self.remaining_amount) & Q(amount__lte=self.individual_amount) & Q(delivery_date__lte=self.project_delivery_deadline))
+        
+        return [item.id for item in items]
 
 
 class Project(models.Model):
@@ -49,3 +56,9 @@ class Project(models.Model):
 
     def __str__(self):
         return f"Project: {self.name}"
+
+    def list_investors(self):
+        """Returns list of IDs of all investors that fulfil investing criteria."""
+        items = Investor.objects.filter(Q(remaining_amount__gte=self.amount) & Q(individual_amount__gte=self.amount) & Q(project_delivery_deadline__gte=self.delivery_date))
+        
+        return [item.id for item in items]
