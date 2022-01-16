@@ -112,3 +112,5 @@ GitHub.sublime-settings
 !.vscode/extensions.json 
 .history
 
+# My VS code puts json settings into project's root.
+.vscode
