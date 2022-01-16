@@ -130,3 +130,57 @@ class MathingInvestorsViewTest(TestCase):
         res = self.client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
+
+
+class InvestIntoProjectTest(TestCase):
+    """Testcase for InvestIntoProject."""
+
+    @staticmethod
+    def _get_url(investor_id, project_id):
+        return f'/investors/{investor_id}/invest/{project_id}/'
+
+    def setUp(self):
+        self.investor = Investor.objects.create(
+            name='test_name',
+            remaining_amount=50000.00,
+            total_amount=100000.00,
+            individual_amount=500.00,
+            project_delivery_deadline='2022-02-22',
+        )
+        self.project_1 = Project.objects.create(
+            name='test_name_1',
+            description='test_1',
+            amount=500.00,
+            delivery_date='2022-01-22',
+        )
+        self.project_2 = Project.objects.create(
+            name='test_name_2',
+            description='test_2',
+            amount=5000.00,
+            delivery_date='2022-04-11',
+        )
+    
+        self.client = APIClient()
+
+    def test_investing_into_project_pass_rules(self):
+        """Test investing into validated projects"""
+        url_1 = self._get_url(self.investor.id, self.project_1.id)
+        res_1 = self.client.post(url_1)
+        self.assertEqual(res_1.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_1.data["funded_project"]["id"], 1)
+        self.assertEqual(res_1.data['funded_project']["name"], "test_name_1")
+        self.assertEqual(res_1.data['funded_project']['description'], 'test_1')
+        # This returns str dunno if this is a bug or a feature.
+        self.assertEqual(res_1.data['funded_project']['amount'], '500.00')
+        self.assertEqual(res_1.data['funded_project']['delivery_date'], '2022-01-22')
+        self.assertTrue(res_1.data['funded_project']['funded'])
+        self.assertEqual(res_1.data['funded_project']['funded_by'], 1)
+        # This one actually returns Decimal...I'm confused.
+        self.assertEqual(res_1.data['remaining_amount'], 99500.00)
+
+    def test_investing_into_wrong_project(self):
+        """Test investing into projects that don't pass matching rules"""
+        url_2 = self._get_url(self.investor.id, self.project_2.id)
+        res_2 = self.client.post(url_2)
+        self.assertEqual(res_2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res_2.data["details"], "Investor's individual amount is less than project's amount")
